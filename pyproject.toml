@@ -2,12 +2,15 @@
 requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
+[tool.setuptools]
+packages = ["cowarp"]
+
 [project]
 name = "cowarp"
 version = "0.1.0"
 description = "Correlation Optimized Warping (COW) algorithm for signal alignment"
 readme = "README.md"
-license = { text = "MIT" }
+license = "MIT"
 authors = [
     { name = "Guram Chaganava" }
 ]

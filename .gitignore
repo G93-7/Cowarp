@@ -1,0 +1,16 @@
+# Ignore the virtual environment
+venv/
+
+# Ignore PyCharm project files
+.idea/
+
+# Ignore __pycache__ and other Python cache files
+__pycache__/
+*.pyc
+
+# Ignore environment variable files
+*.env
+
+*.egg-info/
+build/
+dist/

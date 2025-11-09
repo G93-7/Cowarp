@@ -15,7 +15,7 @@
 #  Created: [08.11.2025]
 # ======================================================================
 
-from cow_dynamic_no_edges_final import cow_dynamic_no_edges
+from .cow_dynamic_no_edges import cow_dynamic_no_edges
 
 
 def warp(reference,
