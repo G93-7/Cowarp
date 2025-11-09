@@ -9,14 +9,14 @@ This is the initial release of the package. It currently includes a single imple
 ## 🛠️ Installation
 
 ```markdown
-pip install cowarping
+pip install cowarp
 ```
 
 ## 🚀 Basic Usage
 
 ```markdown
 import numpy as np
-from warping import warp
+from cowarp import warp
 
 # Example reference and sample signals
 reference = np.sin(np.linspace(0, 2 * np.pi, n))
@@ -101,7 +101,7 @@ contains nonlinear time shifts and noise relative to the reference.
 
 import numpy as np
 import matplotlib.pyplot as plt
-from warping import warp
+from cowarp import warp
 
 
 def generate_chromatogram(num_points=400, random_shift=False, noise_level=0.01):
