@@ -1,6 +1,6 @@
 ## 📘 Cowarp – Correlation Optimized Warping in Python
 
-**COWarp** is a Python implementation of an alignment method called Correlation Optimized Warping (COW). This technique is widely used in spectroscopy, chromatography, and other analytical fields to align signals that may have local time shifts or distortions. COW aligns one signal (sample) to another (reference) by segmenting the signals and warping segments to maximize correlation.
+**Cowarp** is a Python implementation of an alignment method called Correlation Optimized Warping (COW). This technique is widely used in spectroscopy, chromatography, and other analytical fields to align signals that may have local time shifts or distortions. COW aligns one signal (sample) to another (reference) by segmenting the signals and warping segments to maximize correlation.
 
 This is the initial release of the package. It currently includes a single implementation of the COW algorithm, in which the sample signal endpoints remain fixed (i.e., not subject to warping).
 
@@ -28,7 +28,7 @@ aligned_sample, corr = warp(reference, sample, num_intervals=5, slack=8)
 
 ## ⚙️ Function Signature
 ```markdown
-cow(
+warp(
     reference,
     sample,
     num_intervals=None,
@@ -177,7 +177,7 @@ plt.show()
 
 The resulting plot is given below.
 
-![COW Chromatogram Alignment](images/chromatogram_alignment.jpeg)
+![COW Chromatogram Alignment](https://raw.githubusercontent.com/G93-7/Cowarp/ec6dbd9c71a9b3595af76803bd1982685978a83d/images/chromatogram_alignment.jpeg)
 
 ## 🧾 License
 

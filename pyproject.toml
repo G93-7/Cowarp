@@ -7,7 +7,7 @@ packages = ["cowarp"]
 
 [project]
 name = "cowarp"
-version = "0.1.0"
+version = "0.1.4"
 description = "Correlation Optimized Warping (COW) algorithm for signal alignment"
 readme = "README.md"
 license = "MIT"
