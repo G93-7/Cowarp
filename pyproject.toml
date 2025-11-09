@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cowarp"
+version = "0.1.0"
+description = "Correlation Optimized Warping (COW) algorithm for signal alignment"
+readme = "README.md"
+license = { text = "MIT" }
+authors = [
+    { name = "Guram Chaganava" }
+]
+keywords = ["signal processing", "time series", "warping", "alignment", "COW"]
+requires-python = ">=3.8"
+
+dependencies = [
+    "numpy>=1.20",
+]
+
+[project.urls]
+Homepage = "https://github.com/yourusername/cow"
+Documentation = "https://github.com/yourusername/cow#readme"
