@@ -51,7 +51,7 @@ def validate_input_array(input_data):
     try:
         numeric_array = np.asarray(input_data)
     except Exception as e:
-        raise TypeError(f"[COW] input cannot be converted to array: {e}")
+        raise TypeError(f"[cowarp] input cannot be converted to array: {e}")
 
     # enforces scalar → 1D conversion and preserves shape otherwise
     arr = np.atleast_1d(numeric_array)
@@ -59,21 +59,21 @@ def validate_input_array(input_data):
     # Must be 1D only
     arr_dim = numeric_array.ndim
     if arr_dim != 1:
-        raise ValueError(f"[COW] input must be 1D array, got {arr_dim}D array")
+        raise ValueError(f"[cowarp] input must be 1D array, got {arr_dim}D array")
 
     # Validate numeric dtype
     if not np.issubdtype(numeric_array.dtype, np.number):
-        raise ValueError(f"[COW] input contains non-numeric data (dtype={arr.dtype})")
+        raise ValueError(f"[cowarp] input contains non-numeric data (dtype={arr.dtype})")
 
     # Any NaN present is invalid
     if np.isnan(numeric_array).any():
-        raise ValueError("[COW] input contains NaN values — clean or interpolate before calling this function")
+        raise ValueError("[cowarp] input contains NaN values — clean or interpolate before calling this function")
 
     # Convert to float64 if needed (copy=False avoids unnecessary copy)
     try:
         return numeric_array.astype(np.float64, copy=False)
     except MemoryError as e:
-        raise MemoryError(f"[COW] insufficient memory to convert input to float64: {e}")
+        raise MemoryError(f"[cowarp] insufficient memory to convert input to float64: {e}")
 
 
 def validate_input(input):
@@ -110,7 +110,7 @@ def validate_input(input):
     # Handle NumPy scalar arrays (0D only)
     if isinstance(input, np.ndarray):
         if input.ndim != 0:
-            raise ValueError("[COW] Input must be a scalar, not an array.")
+            raise ValueError("[cowarp] Input must be a scalar, not an array.")
         input = input.item()  # Extract Python scalar
 
     # Integer type → return as-is
@@ -120,11 +120,11 @@ def validate_input(input):
     # Float type → round to nearest integer
     if isinstance(input, (float, np.floating)):
         if np.isnan(input):
-            raise ValueError("Input cannot be NaN.")
+            raise ValueError("[cowarp] Input cannot be NaN.")
         return int(np.rint(input))
 
     # Anything else → reject
-    raise ValueError("Input must be a numeric scalar (int or float).")
+    raise ValueError("[cowarp] Input must be a numeric scalar (int or float).")
 
 
 def has_valid_len(arr_len, min_len):
@@ -169,15 +169,15 @@ def determine_min_interval_length(min_interval_length, verbose=False):
     if min_interval_length is None:
         min_interval_length = 3
         if verbose:
-            print(f"min_interval_length not provided, using default={min_interval_length}")
+            print(f"[cowarp] min_interval_length not provided, using default={min_interval_length}")
 
     min_interval_length = validate_input(min_interval_length)
 
     if min_interval_length < 2:
-        raise ValueError(f"min_interval_length={min_interval_length} is invalid; must be >= 2")
+        raise ValueError(f"[cowarp] min_interval_length={min_interval_length} is invalid; must be >= 2")
 
     if verbose:
-        print(f"[COW] Using min_interval_length = {min_interval_length}")
+        print(f"[cowarp] Using min_interval_length = {min_interval_length}")
 
     return min_interval_length
 
@@ -236,11 +236,11 @@ def determine_num_intervals(
             interval_length = validate_input(interval_length)
             num_intervals = signal_length // interval_length
             if verbose:
-                print(f"[COW] num_intervals auto-set from interval_length → {num_intervals}")
+                print(f"[cowarp] num_intervals auto-set from interval_length → {num_intervals}")
         else:
-            num_intervals = max_allowed // 2
+            num_intervals = max(max_allowed // 2, 2)
             if verbose:
-                print(f"[COW] num_intervals auto-set to half of maximum → {num_intervals}")
+                print(f"[cowarp] num_intervals auto-set to → {num_intervals}")
 
     # Validate numeric input
     num_intervals = validate_input(num_intervals)
@@ -248,15 +248,15 @@ def determine_num_intervals(
     # Check validity range
     if num_intervals < min_allowed:
         raise ValueError(
-            f"num_intervals={num_intervals} is below the minimum allowed ({min_allowed})"
+            f"[cowarp] num_intervals={num_intervals} is below the minimum allowed ({min_allowed})"
         )
     if num_intervals > max_allowed:
         raise ValueError(
-            f"num_intervals={num_intervals} exceeds the maximum allowed ({max_allowed})"
+            f"[cowarp] num_intervals={num_intervals} exceeds the maximum allowed ({max_allowed})"
         )
 
     if verbose:
-        print(f"[COW] Using num_intervals = {num_intervals}")
+        print(f"[cowarp] Using num_intervals = {num_intervals}")
 
     return num_intervals
 
@@ -291,24 +291,24 @@ def determine_slack(slack, interval_length, min_interval_length, verbose=False):
     max_slack = max(1, interval_length - min_interval_length)
 
     if slack is None:
-        slack = max_slack // 2
+        slack = max(max_slack // 2, 1)
         if verbose:
-            print(f"[COW] Slack auto-set to half of maximum value -> {slack}")
+            print(f"[cowarp] Slack auto-set to -> {slack}")
 
     slack = validate_input(slack)
 
     # Check validity range
     if slack < min_slack:
         raise ValueError(
-            f"slack={slack} is below the minimum allowed ({min_slack})"
+            f"[cowarp] slack={slack} is below the minimum allowed ({min_slack})"
         )
     if slack > max_slack:
         raise ValueError(
-            f"num_intervals={slack} exceeds the maximum allowed ({max_slack})"
+            f"[cowarp] num_intervals={slack} exceeds the maximum allowed ({max_slack})"
         )
 
     if verbose:
-        print(f"[COW] Using slack = {slack}")
+        print(f"[cowarp] Using slack = {slack}")
 
     return slack
 
@@ -337,7 +337,7 @@ def get_boundary_indices(num_intervals, interval_length, signal_length, verbose=
     boundaries = [i * interval_length for i in range(num_intervals)]
     boundaries.append(signal_length)
     if verbose:
-        print(f"[COW] boundary indices -> {boundaries}")
+        print(f"[cowarp] boundary indices -> {boundaries}")
     return boundaries
 
 
@@ -714,7 +714,7 @@ def calculate_optimal_warping_path(best_cumulative_correlations,
         best_border_index = np.argmax(possible_start_borders[row] == best_border)
 
     if verbose:
-        print(f"[COW] optimal_warping_path -> {optimal_warping_path}")
+        print(f"[cowarp] optimal_warping_path -> {optimal_warping_path}")
 
     return optimal_warping_path
 
@@ -855,20 +855,20 @@ def cow_dynamic_no_edges(
 
     # check signal length validity
     if not has_valid_len(ref_len, min_interval_length):
-        raise ValueError(f"reference len < min_interval_length")
+        raise ValueError(f"[cowarp] reference len < min_interval_length")
 
     if not has_valid_len(samp_len, min_interval_length):
-        raise ValueError(f"sample len < min_interval_length")
+        raise ValueError(f"[cowarp] sample len < min_interval_length")
 
     # check if signals are warpable
     if not is_warpable_case_no_edges(ref_len, min_interval_length) and \
             not is_warpable_case_no_edges(samp_len, min_interval_length):
 
-        print(f'signal length should be more than or equal to 2*min_interval_len+1 to be warpable')
-        raise ValueError("signals are too short for warping.")
+        print(f'[cowarp] signal length should be more than or equal to 2*min_interval_len+1 to be warpable')
+        raise ValueError("[cowarp] signals are too short for warping.")
 
     elif not is_warpable_case_no_edges(ref_len, min_interval_length):
-        print("reference is not warpable!")
+        print("[cowarp] reference is not warpable!")
         print(f'signal length should be more than 2*min_interval_len+1 to be warpable')
         print("resampling reference to the length os sample!")
         print()
@@ -877,7 +877,7 @@ def cow_dynamic_no_edges(
             reference_len = len(reference)
 
     elif not is_warpable_case_no_edges(samp_len, min_interval_length):
-        print("sample is not warpable")
+        print("[cowarp] sample is not warpable")
         print(f'signal length should be more than 2*min_interval_len+1 to be warpable')
         print("resampling sample to the length of reference")
         print()
@@ -916,7 +916,7 @@ def cow_dynamic_no_edges(
     # Final similarity
     final_corr = calculate_correlation(reference, warped)
     if verbose:
-        print(f"Final correlation: {final_corr:.5f}")
+        print(f"[cowarp] Final correlation: {final_corr:.5f}")
 
     if return_details:
         return {
