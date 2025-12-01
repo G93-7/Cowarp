@@ -13,6 +13,9 @@
 # Symmetric structure, increasing number of possible border positions from edge to center.
 # Vectorized solution for speed-up.
 
+#  Author: [Guram Chaganava]
+#  Created: [08.11.2025]
+
 import numpy as np
 
 
