@@ -4,7 +4,7 @@
 
 This is the initial release of the package. It currently includes a single implementation of the COW algorithm, in which the sample signal endpoints remain fixed (i.e., not subject to warping).
 
-![Version](https://img.shields.io/badge/Version-0.1.6-blue)
+![Version](https://img.shields.io/badge/Version-0.1.7-blue)
 
 ## 🛠️ Installation
 
@@ -189,6 +189,6 @@ Guram Chaganava
 
 Electrical & Electronics Engineer | Machine Learning Enthusiast
 
-[LinkedIn](www.linkedin.com/in/guram-chaganava)
+[LinkedIn](https://www.linkedin.com/in/guram-chaganava/)
 
 
