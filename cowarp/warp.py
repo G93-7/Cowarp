@@ -21,7 +21,7 @@ from .cow_dynamic_no_edges import cow_dynamic_no_edges
 def warp(reference,
          sample,
          num_intervals=None,
-         interval_length=None,
+         segment_length=None,
          slack=None,
          min_interval_length=None,
          return_details=False,
@@ -96,17 +96,11 @@ def warp(reference,
       implementations change or multiple algorithms are added later.
     * All returned signals are guaranteed to be 1D NumPy float64 arrays.
 
-    Examples
-    --------
-    # >>> from test_pa.main import cow
-    # >>> warped, corr = cow(ref_signal, sample_signal, num_intervals=10)
-    # >>> corr
-    0.9824
     """
     return cow_dynamic_no_edges(reference,
                                 sample,
                                 num_intervals=num_intervals,
-                                interval_length=interval_length,
+                                segment_length=segment_length,
                                 slack=slack,
                                 min_interval_length=min_interval_length,
                                 return_details=return_details,

@@ -130,6 +130,58 @@ def validate_input(input):
     raise ValueError("[cowarp] Input must be a numeric scalar (int or float).")
 
 
+def validate_input_or_none(input):
+    """
+    Validate and convert a single numeric input to an integer.
+
+    Accepts:
+        • Python int or float
+        • NumPy scalar (0-D array)
+        • Returns None for unsupported or non-numeric types
+
+    Conversion rules:
+        • Integer inputs are returned unchanged
+        • Float inputs are rounded to the nearest integer using np.rint
+        • NumPy 0-D arrays are converted to Python scalars
+        • Non-scalar NumPy arrays raise an error
+        • NaN values raise an error
+
+    Parameters
+    ----------
+    input : int, float, numpy scalar, numpy.ndarray, or None
+        Input value expected to represent a single numeric quantity.
+
+    Returns
+    -------
+    int or None
+        Integer value after validation and rounding,
+        or None if the input type is unsupported.
+
+    Raises
+    ------
+    ValueError
+        If input is a non-scalar NumPy array or NaN.
+    """
+
+    # Handle NumPy scalar arrays (0D only)
+    if isinstance(input, np.ndarray):
+        if input.ndim != 0:
+            raise ValueError("[COW] Input must be a scalar, not an array.")
+        input = input.item()  # Extract Python scalar
+
+    # Integer type → return as-is
+    if isinstance(input, (int, np.integer)):
+        return int(input)
+
+    # Float type → round to nearest integer
+    if isinstance(input, (float, np.floating)):
+        if np.isnan(input):
+            raise ValueError("Input cannot be NaN.")
+        return int(np.rint(input))
+
+    return None
+
+
 def has_valid_len(arr_len, min_len):
     """
     Check if a signal length meets the minimum length requirement.
@@ -185,6 +237,67 @@ def determine_min_interval_length(min_interval_length, verbose=False):
     return min_interval_length
 
 
+def determine_segment_length(interval_length, signal_length,
+                              min_interval_length, verbose=False):
+    """
+    Validate and determine the interval length parameter.
+
+    The function validates and converts `interval_length` to an integer
+    using `validate_input_or_none`, then checks whether it lies within
+    the allowed range:
+
+        min_interval_length ≤ interval_length ≤ signal_length // 2
+
+    If `interval_length` is None (or unsupported), it is returned as None
+    without range validation.
+
+    Parameters
+    ----------
+    interval_length : int, float, numpy scalar, or None
+        Proposed interval length value.
+    signal_length : int
+        Length of the signal. Used to compute the maximum allowed value
+        as signal_length // 2.
+    min_interval_length : int
+        Minimum allowed interval length.
+    verbose : bool, optional
+        If True, prints the validated interval length.
+
+    Returns
+    -------
+    int or None
+        Validated interval length, or None if no valid numeric input
+        was provided.
+
+    Raises
+    ------
+    ValueError
+        If interval_length is outside the allowed range.
+    """
+
+    min_allowed = min_interval_length
+    max_allowed = signal_length // 2
+
+    # Validate numeric input
+    interval_length = validate_input_or_none(interval_length)
+
+    if interval_length is not None:
+        # Check validity range
+        if interval_length < min_allowed:
+            raise ValueError(
+                f"interval_length={interval_length} is below the minimum allowed ({min_allowed})"
+            )
+        if interval_length > max_allowed:
+            raise ValueError(
+                f"interval_length={interval_length} exceeds the maximum allowed ({max_allowed})"
+            )
+
+    if verbose:
+        print(f"[cowarp] Using interval_length = {interval_length}")
+
+    return interval_length
+
+
 def determine_num_intervals(
         num_intervals,
         interval_length,
@@ -193,39 +306,48 @@ def determine_num_intervals(
         verbose=False,
 ):
     """
-    Determine the number of warping intervals for Correlation Optimized Warping (COW).
+    Validate or determine the number of warping intervals for COW.
+
+    The function ensures that `num_intervals` satisfies:
+
+        2 ≤ num_intervals ≤ signal_length // min_interval_length
+
+    If `num_intervals` is not provided, it is computed automatically:
+
+    - If both `num_intervals` and `interval_length` are None,
+      `num_intervals` is set to half of the maximum allowed value,
+      and `interval_length` is derived accordingly.
+    - If `interval_length` is provided but `num_intervals` is None,
+      then `num_intervals = signal_length // interval_length`.
+    - If both are provided but inconsistent, `num_intervals` is
+      recomputed from `interval_length`.
+
+    The function may also recompute `interval_length` to ensure
+    consistency with the final `num_intervals`.
 
     Parameters
     ----------
-    num_intervals : int or None
-        Number of intervals to use. If None, it will be computed automatically.
+    num_intervals : int, float, numpy scalar, or None
+        Desired number of intervals.
     interval_length : int or None
-        Length of each interval. Used only if `num_intervals` is not provided.
+        Desired interval length.
     signal_length : int
-        Total length of the signal to be warped.
+        Total signal length.
     min_interval_length : int
-        Minimum allowed size for each interval.
+        Minimum allowed interval size.
     verbose : bool, optional
-        If True, prints internal decisions and computed values. Defaults to False.
+        If True, prints computed values and internal decisions.
 
     Returns
     -------
-    int
-        Validated number of intervals to use.
+    tuple (int, int)
+        Validated (num_intervals, interval_length).
 
     Raises
     ------
     ValueError
-        If computed or provided number of intervals is outside valid bounds
-        or input parameters are inconsistent.
-
-    Notes
-    -----
-    - If `num_intervals` is None and `interval_length` is provided,
-      it computes `num_intervals = signal_length // interval_length`.
-    - If neither is provided, defaults to half of the maximum valid interval count.
-    - Ensures the result satisfies:
-          2 ≤ num_intervals ≤ signal_length // min_interval_length
+        If the resulting number of intervals falls outside
+        the allowed range.
     """
     # Define allowable range
     min_allowed = 2
@@ -233,35 +355,40 @@ def determine_num_intervals(
     if signal_length % min_interval_length == 0:
         max_allowed -= 1  # avoid boundary issue
 
+    # Validate numeric input
+    num_intervals = validate_input_or_none(num_intervals)
+
     # Auto-compute if not provided
     if num_intervals is None:
-        if interval_length is not None:
-            interval_length = validate_input(interval_length)
-            num_intervals = signal_length // interval_length
-            if verbose:
-                print(f"[cowarp] num_intervals auto-set from interval_length → {num_intervals}")
-        else:
+        if interval_length is None:
             num_intervals = max(max_allowed // 2, 2)
+            interval_length=signal_length//num_intervals
             if verbose:
-                print(f"[cowarp] num_intervals auto-set to → {num_intervals}")
-
-    # Validate numeric input
-    num_intervals = validate_input(num_intervals)
+                print(f"[cowarp] num_intervals auto-set to half of maximum → {num_intervals}")
+        else:
+            num_intervals=signal_length//interval_length
+    else:
+        if interval_length is None:
+            interval_length = signal_length//num_intervals
+        else:
+            if signal_length//interval_length != num_intervals:
+                num_intervals = signal_length//interval_length
 
     # Check validity range
     if num_intervals < min_allowed:
         raise ValueError(
-            f"[cowarp] num_intervals={num_intervals} is below the minimum allowed ({min_allowed})"
+            f"num_intervals={num_intervals} is below the minimum allowed ({min_allowed})"
         )
     if num_intervals > max_allowed:
         raise ValueError(
-            f"[cowarp] num_intervals={num_intervals} exceeds the maximum allowed ({max_allowed})"
+            f"num_intervals={num_intervals} exceeds the maximum allowed ({max_allowed})"
         )
 
     if verbose:
         print(f"[cowarp] Using num_intervals = {num_intervals}")
+        print(f"[cowarp] Using interval_length = {interval_length}")
 
-    return num_intervals
+    return num_intervals, interval_length
 
 
 def determine_slack(slack, interval_length, min_interval_length, verbose=False):
@@ -776,7 +903,7 @@ def cow_dynamic_no_edges(
         reference,
         sample,
         num_intervals=None,
-        interval_length=None,
+        segment_length=None,
         slack=None,
         min_interval_length=None,
         return_details=False,
@@ -794,10 +921,10 @@ def cow_dynamic_no_edges(
     sample : array-like
         1D numeric signal that will be warped to match the reference.
     num_intervals : int, optional
-        Number of warping intervals. Mutually exclusive with `segment_len`.
-    interval_length : int, optional
-        Desired fixed length of each interval. Used if `num_of_intervals`
-        is not provided.
+        Number of warping intervals. Mutually exclusive with `segment_length`.
+    segment_length : int, optional
+        Desired fixed length of each interval. Mutually exclusive with `num_intervals`.
+        If both are provided, `num_intervals` is redefined from `segment_length`.
     slack : int, optional
         Maximum number of samples allowed for warping per segment
         (`segment_len ± slack`). If None, determined automatically.
@@ -892,14 +1019,14 @@ def cow_dynamic_no_edges(
         sample = interpolate_signal(sample, samp_len, ref_len)
 
     # --- Parameter determination ---
-    num_intervals = determine_num_intervals(num_intervals, interval_length, ref_len, min_interval_length, verbose)
-    interval_length = ref_len // num_intervals
-    slack = determine_slack(slack, interval_length, min_interval_length, verbose)
-    boundary_indices = get_boundary_indices(num_intervals, interval_length, ref_len, verbose)
+    segment_length = determine_segment_length(segment_length, ref_len, min_interval_length, verbose)
+    num_intervals, segment_length = determine_num_intervals(num_intervals, segment_length, ref_len, min_interval_length, verbose)
+    slack = determine_slack(slack, segment_length, min_interval_length, verbose)
+    boundary_indices = get_boundary_indices(num_intervals, segment_length, ref_len, verbose)
 
     # --- Dynamic programming matrix ---
     best_cumulative_correlations, possible_start_borders, best_end_borders = \
-        fill_correlation_matrix(reference, sample, num_intervals, slack, interval_length,
+        fill_correlation_matrix(reference, sample, num_intervals, slack, segment_length,
                                 min_interval_length, boundary_indices)
 
     # --- Optimal path extraction ---
