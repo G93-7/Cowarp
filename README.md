@@ -9,7 +9,7 @@ The package currently includes implementations of the two different COW variants
 
 In both implementations the sample signal endpoints remain fixed (i.e., not subject to warping).
 
-![Version](https://img.shields.io/badge/Version-0.2.0-blue)
+![Version](https://img.shields.io/badge/Version-0.2.1-blue)
 
 ## 🛠️ Installation
 
