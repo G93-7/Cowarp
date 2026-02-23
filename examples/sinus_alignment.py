@@ -10,6 +10,7 @@ sample = np.sin(np.linspace(0, 2 * np.pi, n) + 0.5)
 
 start_time = time.time()
 result_dict = warp(reference, sample,
+                   auto_segment=False,
                    num_intervals=5,
                    slack=8,
                    min_interval_length=2,

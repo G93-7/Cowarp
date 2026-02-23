@@ -902,12 +902,12 @@ def calculate_warped_sample(
 def cow_dynamic_no_edges(
         reference,
         sample,
-        num_intervals=None,
-        segment_length=None,
-        slack=None,
-        min_interval_length=None,
-        return_details=False,
-        verbose=False
+        num_intervals,
+        segment_length,
+        slack,
+        min_interval_length,
+        return_details,
+        verbose
 ):
     """
     Perform Correlation Optimized Warping (COW) between two 1D signals.
