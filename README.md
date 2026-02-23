@@ -2,10 +2,10 @@
 
 **Cowarp** is a Python implementation of an alignment method called Correlation Optimized Warping (COW). This technique is widely used in spectroscopy, chromatography, and other analytical fields to align signals that may have local time shifts or distortions. COW aligns one signal (sample) to another (reference) by segmenting the signals and warping segments to maximize correlation.
 
-The package currently includes two implementations of the COW algorithm:
+The package currently includes implementations of the two different COW variants:
 
 1. standart COW
-2. COW with automatic segmentation (ASCOW)
+2. COW with automatic segmentation (ASCOW).
 
 In both implementations the sample signal endpoints remain fixed (i.e., not subject to warping).
 
@@ -41,6 +41,28 @@ aligned_sample, corr = warp(
 )
 ```
 
+## Automatic Segmented COW (ASCOW)
+
+ASCOW extends the standard COW algorithm by automatically determining segment boundaries based on the structural characteristics of the reference signal.
+
+Instead of manually specifying the number of intervals and slack, ASCOW detects boundaries using one of the following segmentation strategies:
+
+- Stationary points
+
+- Inflection points
+
+- Peak boundaries
+
+Segment flexibility is controlled by a deformation coefficient, which determines the allowable boundary movement relative to the lengths of adjacent segments.
+
+For reliable boundary detection, it is recommended to smooth the reference signal prior to segmentation. Cowarp provides built-in filtering options, including:
+
+- Moving average filter
+
+- Gaussian filter
+
+Additionally, users may supply a custom filtering function for full flexibility.
+
 ## ⚙️ Function Signature
 ```markdown
 warp(
@@ -70,17 +92,48 @@ warp(
 
 ## 📚 Parameters
 
-| Parameter             | Type                | Description                                                                               |
-| --------------------- | ------------------- | ----------------------------------------------------------------------------------------- |
-| `reference`           | array-like          | Reference (target) 1D signal to align against.                                               |
-| `sample`              | array-like          | Sample signal to be warped and aligned to the reference. Currently supports only 1D signals.                                   |
-| `auto-segment`        | bool                | If False → manual segmentation. If True → automatic segmentation (ASCOW).      
-| `num_intervals`       | int, optional       | Number of intervals to divide the signal into. Mutually exclusive with `interval_length`. |
-| `interval_length`     | int, optional       | Length of each interval. Alternative to `num_intervals`.                                  |
-| `slack`               | int, optional       | Maximum allowed deviation (shift) in interval boundary positions.                         |
-| `min_interval_length` | int, optional       | Minimum length allowed for any interval. Default: 3.                                      |
-| `return_details`      | bool, default=False | If True, returns additional details (e.g., warp path).                      |
-| `verbose`             | bool, default=False | If True, prints internal decisions and computed values.                            |
+Core Inputs
+
+| Parameter   | Type       | Description                                 |
+| ----------- | ---------- | ------------------------------------------- |
+| `reference` | array-like | Reference (target) 1D signal.               |
+| `sample`    | array-like | Signal to be warped to match the reference. |
+
+Segmentation Mode
+
+| Parameter      | Type | Description                                                                   |
+| -------------- | ---- | ----------------------------------------------------------------------------- |
+| `auto_segment` | bool | If `False` → manual segmentation. If `True` → automatic segmentation (ASCOW). |
+
+
+Manual Segmentation Parameters (auto_segment=False)
+
+| Parameter         | Type | Description                                               |
+| ----------------- | ---- | --------------------------------------------------------- |
+| `num_intervals`   | int  | Number of warping intervals.                              |
+| `interval_length` | int  | Length of each interval (alternative to `num_intervals`). |
+| `slack`           | int  | Maximum allowed boundary shift (±).                       |
+
+
+Automatic Segmentation Parameters (auto_segment=True)
+
+| Parameter                  | Type      | Description                                                                                |
+| -------------------------- | --------- | ------------------------------------------------------------------------------------------ |
+| `segmentation_type`        | str       | Boundary detection strategy (`'stationary_points'`, `'inflection_points'`, `'peak_boundaries'`). |
+| `deformation_coeff`        | float     | Boundary flexibility coefficient in `[0, 1]`.                                              |
+| `filter_func_code`         | str       | Built-in filter identifier (`'moving_average'`, `'gaussian'`, `'no_filter'`).                                               |
+| `filter_func`              | callable  | Custom filtering function (overrides `filter_func_code`).                                  |
+| `filter_func_params`       | int/float | Filter parameter (e.g., window size, sigma).                                               |
+| `process_filtered_signals` | bool      | If True, warping is performed on filtered signals.                                         |
+
+Shared Parameters
+
+| Parameter             | Type | Description                                    |
+| --------------------- | ---- | ---------------------------------------------- |
+| `min_interval_length` | int  | Minimum allowed interval size.                 |
+| `return_details`      | bool | If True, returns detailed warping information. |
+| `verbose`             | bool | Enables diagnostic output.                     |
+
 
 ## 📤 Returns
 
