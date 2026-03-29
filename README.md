@@ -5,11 +5,11 @@
 The package currently includes implementations of the two different COW variants:
 
 1. standart COW
-2. COW with automatic segmentation (ASCOW).
+2. Adaptive Segmentation COW (ASCOW).
 
 In both implementations the sample signal endpoints remain fixed (i.e., not subject to warping).
 
-![Version](https://img.shields.io/badge/Version-0.2.1-blue)
+![Version](https://img.shields.io/badge/Version-0.2.2-blue)
 
 ## 🛠️ Installation
 
@@ -41,7 +41,7 @@ aligned_sample, corr = warp(
 )
 ```
 
-## Automatic Segmented COW (ASCOW)
+## Adaptive Segmentation COW (ASCOW)
 
 ASCOW extends the standard COW algorithm by automatically determining segment boundaries based on the structural characteristics of the reference signal.
 
